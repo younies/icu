@@ -54,6 +54,8 @@ MessageFormatRegressionTest::runIndexedTest( int32_t index, UBool exec, const ch
     TESTCASE_AUTO(TestChoicePatternQuote)
     TESTCASE_AUTO(Test4112104)
     TESTCASE_AUTO(TestICU12584)
+    TESTCASE_AUTO(TestICU12585)
+    TESTCASE_AUTO(TestICU12586)
     TESTCASE_AUTO(TestAPI)
     TESTCASE_AUTO_END;
 }
@@ -1012,6 +1014,44 @@ void MessageFormatRegressionTest::TestICU12584() {
     count = 0;
     inner_msg.getFormats(count);
     assertEquals("Inner placeholder match", 3, count);
+}
+
+void MessageFormatRegressionTest::TestICU12585()
+{
+    UnicodeString pattern(
+        u"{0, plural, one {You have {0,number,::.0} star.} "
+        u"other {You have {0,number,::.0} stars.}}");
+
+    UErrorCode status = U_ZERO_ERROR;
+    MessageFormat formatter(pattern, status);
+
+    Formattable number(1);
+    Formattable args(&number, 1);
+    UnicodeString result;
+
+    // Format the `result` according to the `args`.
+    formatter.format(args, result, status);
+
+    assertEquals("1.0 have a plural format", result, "You have 1.0 stars.");
+}
+
+void MessageFormatRegressionTest::TestICU12586()
+{
+    UnicodeString pattern(
+        u"{0, plural, one {You have {0,number,::.0} star.} "
+        u"other {You have {0,number,::.0} stars.}}");
+
+    UErrorCode status = U_ZERO_ERROR;
+    MessageFormat formatter(pattern, status);
+
+    Formattable number(1);
+    Formattable args(&number, 1.0);
+    UnicodeString result;
+
+    // Format the `result` according to the `args`.
+    formatter.format(args, result, status);
+
+    assertEquals("1.0 have a plural format", result, "You have 1.0 stars.");
 }
 
 void MessageFormatRegressionTest::TestAPI() {
