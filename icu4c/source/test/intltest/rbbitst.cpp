@@ -1729,12 +1729,12 @@ RBBICharMonkey::RBBICharMonkey() {
     }
     fSets->addElement(fSpacingSet, status); classNames.push_back("Spacing");
     fSets->addElement(fHangulSet, status); classNames.push_back("Hangul");
-    fSets->addElement(fAnySet, status); classNames.push_back("Any");
     fSets->addElement(fZWJSet, status); classNames.push_back("ZWJ");
     fSets->addElement(fExtendedPictSet, status); classNames.push_back("ExtendedPict");
     fSets->addElement(fViramaSet, status); classNames.push_back("Virama");
     fSets->addElement(fLinkingConsonantSet, status); classNames.push_back("LinkingConsonant");
     fSets->addElement(fExtCccZwjSet, status); classNames.push_back("ExtCcccZwj");
+    fSets->addElement(fAnySet, status); classNames.push_back("Any");
 
     if (U_FAILURE(status)) {
         deferredStatus = status;
@@ -4119,8 +4119,6 @@ void RBBITest::RunMonkey(BreakIterator *bi, RBBIMonkeyKind &mk, const char *name
         "%4s %3i :  %1s  %1s  %10s  %-" + 
         std::string(maxClassBuffSize) +
         "s  %-40s  %-40s";
-    char* errLineFormat = new char[errLineFormatString.size() + 1];
-    strcpy(errLineFormat, errLineFormatString.c_str());
 
     while (loopCount < numIterations || numIterations == -1) {
         if (numIterations == -1 && loopCount % 10 == 0) {
@@ -4348,7 +4346,7 @@ void RBBITest::RunMonkey(BreakIterator *bi, RBBIMonkeyKind &mk, const char *name
 
                     char buffer[200];
                     snprintf(buffer, 200,
-                        errLineFormat,
+                        errLineFormatString.c_str(),
                         currentLineFlag.c_str(),
                         ci, 
                         expectedBreaks[ci] == 0 ? "." : "|",  // Reference break
