@@ -4261,8 +4261,8 @@ void RBBITest::RunMonkey(BreakIterator *bi, RBBIMonkeyKind &mk, const char *name
                              currentBreakData[ci] == 0 ? "." : "|",  // Actual break
                              hexCodePoint,
                              classNameSize,
-                        mk.classNameFromCodepoint(c).c_str(),
-                        mk.getAppliedRule(ci).c_str(), cName);
+                             mk.classNameFromCodepoint(c).c_str(),
+                             mk.getAppliedRule(ci).c_str(), cName);
 
                     // Output the error
                     if (ci == i) {
