@@ -46,6 +46,8 @@ public:
     void TestChoicePatternQuote(void);
     void Test4112104(void);
     void TestICU12584(void);
+    void TestUseNumberFormatToSelectPluralICU20617(void);
+    void TestUseNumberFormatToSelectPluralICU20617_2(void);
     void TestAPI(void);
 
 protected:
