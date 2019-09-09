@@ -1043,7 +1043,7 @@ void MessageFormatRegressionTest::TestUseNumberFormatToSelectPluralICU20617_2()
     UErrorCode status = U_ZERO_ERROR;
     MessageFormat formatter(pattern, status);
 
-    Formattable number(1);
+    Formattable number(1.0);
     Formattable args(&number, 1.0);
     UnicodeString result;
 
