@@ -32,27 +32,18 @@ attribution to Taligent may not be removed.
 */
 package com.ibm.icu.dev.test.format;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.text.ChoiceFormat;
-import java.text.ParsePosition;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
 import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.text.MessageFormat;
 import com.ibm.icu.text.NumberFormat;
 import com.ibm.icu.util.ULocale;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+
+import java.io.*;
+import java.text.ChoiceFormat;
+import java.text.ParsePosition;
+import java.util.*;
 
 @RunWith(JUnit4.class)
 public class MessageRegressionTest extends TestFmwk {
