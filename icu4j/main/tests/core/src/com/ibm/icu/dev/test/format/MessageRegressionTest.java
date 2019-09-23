@@ -663,6 +663,43 @@ public class MessageRegressionTest extends TestFmwk {
         }
     }
 
+    // This for ensuring that ICU-20617 bug has been fixed
+    @Test
+    public void testIntegralOneNumberFormat() {
+
+        String pattern = String.join(" ","{0, plural,", "one {You have {0,number,::.0} star.}","other {You have {0,number,::.0} stars.}}");
+
+        MessageFormat format = new MessageFormat(pattern);
+
+        Object[] args = {  new Integer(1) };
+
+        String expected = "You have 1.0 stars.";    String result = format.format(args);
+
+        if (!result.equals(expected)) {
+
+            throw new RuntimeException("wrong format result - expected \"" +                expected + "\", got \"" + result + "\"");
+
+        }}
+
+
+    // This for ensuring that ICU-20617 bug has been fixed
+    @Test
+    public void testFloatingOneNumberFormat() {
+
+        String pattern = String.join(" ","{0, plural,", "one {You have {0,number,::.0} star.}","other {You have {0,number,::.0} stars.}}");
+
+        MessageFormat format = new MessageFormat(pattern);
+
+        Object[] args = {  new Double(1.0) };
+
+        String expected = "You have 1.0 stars.";    String result = format.format(args);
+
+        if (!result.equals(expected)) {
+
+            throw new RuntimeException("wrong format result - expected \"" +                expected + "\", got \"" + result + "\"");
+
+        }}
+
     // This test basically ensures that the tests defined above also work with
     // valid named arguments.
     @Test
