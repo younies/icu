@@ -2155,6 +2155,34 @@ UBool IntlTest::assertEquals(const char* message,
     return TRUE;
 }
 
+UBool IntlTest::assertEqualsNear(const char *message, const number::impl::DecNum &expected,
+                                 const number::impl::DecNum &actual, StringPiece precision) {
+    UErrorCode status = U_ZERO_ERROR;
+    number::impl::DecNum precisionDecNum;
+    precisionDecNum.setTo(precision, status);
+
+    number::impl::DecNum difference;
+    difference.setTo(expected, status);
+    difference.subtract(actual, status);
+
+    if (difference.isNegative()) difference.multiplyBy(-1, status);
+
+    if (difference.greaterThan(precisionDecNum, status) || U_FAILURE(status)) {
+        std::string expectedAsString = expected.toString(status).data();
+        std::string actualAsString = actual.toString(status).data();
+        errln((UnicodeString) "FAIL: " + message + "; got " + actualAsString.c_str() + "; expected " +
+              expectedAsString.c_str());
+        return FALSE;
+    }
+#ifdef VERBOSE_ASSERTIONS
+    else {
+        logln((UnicodeString) "Ok: " + message + "; got " +
+              static_cast<std::string>(actual.toString(status).data()).c_str());
+    }
+#endif
+    return TRUE;
+}
+
 static char ASSERT_BUF[256];
 
 static const char* extractToAssertBuf(const UnicodeString& message) {
