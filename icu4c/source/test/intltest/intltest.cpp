@@ -2167,6 +2167,8 @@ UBool IntlTest::assertEqualsNear(const char *message, const number::impl::DecNum
 
     if (difference.isNegative()) difference.multiplyBy(-1, status);
 
+    difference.divideBy(expected, status);
+
     if (difference.greaterThan(precisionDecNum, status) || U_FAILURE(status)) {
         std::string expectedAsString = expected.toString(status).data();
         std::string actualAsString = actual.toString(status).data();

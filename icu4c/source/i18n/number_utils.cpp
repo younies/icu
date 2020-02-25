@@ -9,18 +9,18 @@
 // Helpful in toString methods and elsewhere.
 #define UNISTR_FROM_STRING_EXPLICIT
 
-#include <stdlib.h>
-#include <cmath>
-#include "number_decnum.h"
-#include "number_types.h"
-#include "number_utils.h"
 #include "charstr.h"
 #include "decContext.h"
 #include "decNumber.h"
 #include "double-conversion.h"
 #include "fphdlimp.h"
+#include "number_decnum.h"
+#include "number_types.h"
+#include "number_utils.h"
 #include "uresimp.h"
 #include "ureslocs.h"
+#include <cmath>
+#include <stdlib.h>
 
 using namespace icu;
 using namespace icu::number;
@@ -28,12 +28,10 @@ using namespace icu::number::impl;
 
 using icu::double_conversion::DoubleToStringConverter;
 
-
 namespace {
 
-const char16_t*
-doGetPattern(UResourceBundle* res, const char* nsName, const char* patternKey, UErrorCode& publicStatus,
-             UErrorCode& localStatus) {
+const char16_t *doGetPattern(UResourceBundle *res, const char *nsName, const char *patternKey,
+                             UErrorCode &publicStatus, UErrorCode &localStatus) {
     // Construct the path into the resource bundle
     CharString key;
     key.append("NumberElements/", publicStatus);
@@ -46,51 +44,55 @@ doGetPattern(UResourceBundle* res, const char* nsName, const char* patternKey, U
     return ures_getStringByKeyWithFallback(res, key.data(), nullptr, &localStatus);
 }
 
-}
+} // namespace
 
-
-const char16_t* utils::getPatternForStyle(const Locale& locale, const char* nsName, CldrPatternStyle style,
-                                          UErrorCode& status) {
-    const char* patternKey;
+const char16_t *utils::getPatternForStyle(const Locale &locale, const char *nsName,
+                                          CldrPatternStyle style, UErrorCode &status) {
+    const char *patternKey;
     switch (style) {
-        case CLDR_PATTERN_STYLE_DECIMAL:
-            patternKey = "decimalFormat";
-            break;
-        case CLDR_PATTERN_STYLE_CURRENCY:
-            patternKey = "currencyFormat";
-            break;
-        case CLDR_PATTERN_STYLE_ACCOUNTING:
-            patternKey = "accountingFormat";
-            break;
-        case CLDR_PATTERN_STYLE_PERCENT:
-            patternKey = "percentFormat";
-            break;
-        case CLDR_PATTERN_STYLE_SCIENTIFIC:
-            patternKey = "scientificFormat";
-            break;
-        default:
-            patternKey = "decimalFormat"; // silence compiler error
-            UPRV_UNREACHABLE;
+    case CLDR_PATTERN_STYLE_DECIMAL:
+        patternKey = "decimalFormat";
+        break;
+    case CLDR_PATTERN_STYLE_CURRENCY:
+        patternKey = "currencyFormat";
+        break;
+    case CLDR_PATTERN_STYLE_ACCOUNTING:
+        patternKey = "accountingFormat";
+        break;
+    case CLDR_PATTERN_STYLE_PERCENT:
+        patternKey = "percentFormat";
+        break;
+    case CLDR_PATTERN_STYLE_SCIENTIFIC:
+        patternKey = "scientificFormat";
+        break;
+    default:
+        patternKey = "decimalFormat"; // silence compiler error
+        UPRV_UNREACHABLE;
     }
     LocalUResourceBundlePointer res(ures_open(nullptr, locale.getName(), &status));
-    if (U_FAILURE(status)) { return u""; }
+    if (U_FAILURE(status)) {
+        return u"";
+    }
 
     // Attempt to get the pattern with the native numbering system.
     UErrorCode localStatus = U_ZERO_ERROR;
-    const char16_t* pattern;
+    const char16_t *pattern;
     pattern = doGetPattern(res.getAlias(), nsName, patternKey, status, localStatus);
-    if (U_FAILURE(status)) { return u""; }
+    if (U_FAILURE(status)) {
+        return u"";
+    }
 
     // Fall back to latn if native numbering system does not have the right pattern
     if (U_FAILURE(localStatus) && uprv_strcmp("latn", nsName) != 0) {
         localStatus = U_ZERO_ERROR;
         pattern = doGetPattern(res.getAlias(), "latn", patternKey, status, localStatus);
-        if (U_FAILURE(status)) { return u""; }
+        if (U_FAILURE(status)) {
+            return u"";
+        }
     }
 
     return pattern;
 }
-
 
 DecNum::DecNum() {
     uprv_decContextDefault(&fContext, DEC_INIT_BASE);
@@ -279,7 +281,8 @@ void DecNum::divideBy(const DecNum &rhs, UErrorCode &status) {
     }
 
     uprv_decNumberDivide(fData, fData, rhs.fData, &fContext);
-    if ((fContext.status & DEC_Inexact) != 0) { // TODO(younies): write clarifications.(fContext.status & DEC_Inexact) ==  fContext.status)
+    if ((fContext.status & DEC_Inexact) !=
+        0) { // TODO(younies): write clarifications.(fContext.status & DEC_Inexact) ==  fContext.status)
         // Ignore.
     } else if (fContext.status != 0) {
         status = U_INTERNAL_PROGRAM_ERROR;
@@ -357,16 +360,20 @@ bool DecNum::equalTo(const DecNum &rhs, UErrorCode &status) const {
 }
 
 StringPiece DecNum::toString(UErrorCode &status) const {
+    
+    int32_t capacity = fData.getAlias()->digits + 14;
+    char result[capacity];
+UnicodeString s;
+
+
+    CheckedArrayByteSink sink(result, capacity);
+    toString(sink, status);
+
     if (U_FAILURE(status)) {
-        return StringPiece("");
+        return StringPiece("Status Failure");
     }
 
-    // "string must be at least dn->digits+14 characters long"
-    int32_t minCapacity = fData.getAlias()->digits + 14;
-    MaybeStackArray<char, 30> buffer(minCapacity);
-    uprv_decNumberToString(fData, buffer.getAlias());
-
-    return StringPiece(buffer.getAlias());
+    return result;
 }
 
 void DecNum::toString(ByteSink &output, UErrorCode &status) const {
