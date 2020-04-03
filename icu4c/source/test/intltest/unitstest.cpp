@@ -263,27 +263,27 @@ void unitsTestDataLineFn(void *context, char *fields[][2], int32_t fieldCount, U
 
     // WIP(hugovdm): hook this up to actual tests.
 
-    // // Convertibility:
-    // MaybeStackVector<MeasureUnit> units;
-    // units.emplaceBack(sourceUnit);
-    // units.emplaceBack(targetUnit);
-    // const auto &conversionRateInfoList = getConversionRatesInfo(units, status);
-    // if (status.errIfFailureAndReset("getConversionRatesInfo(...)")) return;
+    // Convertibility:
+    MaybeStackVector<MeasureUnit> units;
+    units.emplaceBack(sourceUnit);
+    units.emplaceBack(targetUnit);
+    const auto &conversionRateInfoList = getConversionRatesInfo(units, status);
+    if (status.errIfFailureAndReset("getConversionRatesInfo(...)")) return;
 
-    // auto actualState = checkUnitsState(sourceUnit, targetUnit, conversionRateInfoList, status);
-    // if (status.errIfFailureAndReset("checkUnitsState(<%s>, <%s>, ...)", sourceUnit.getIdentifier(),
-    //                                 targetUnit.getIdentifier())) {
-    //     return;
-    // }
+    auto actualState = checkUnitsState(sourceUnit, targetUnit, conversionRateInfoList, status);
+    if (status.errIfFailureAndReset("checkUnitsState(<%s>, <%s>, ...)", sourceUnit.getIdentifier(),
+                                    targetUnit.getIdentifier())) {
+        return;
+    }
 
-    // CharString msg;
-    // msg.append("convertible: ", status)
-    //     .append(sourceUnit.getIdentifier(), status)
-    //     .append(" -> ", status)
-    //     .append(targetUnit.getIdentifier(), status);
-    // if (status.errIfFailureAndReset("msg construction")) return;
+    CharString msg;
+    msg.append("convertible: ", status)
+        .append(sourceUnit.getIdentifier(), status)
+        .append(" -> ", status)
+        .append(targetUnit.getIdentifier(), status);
+    if (status.errIfFailureAndReset("msg construction")) return;
 
-    // unitsTest->assertTrue(msg.data(), actualState != UNCONVERTIBLE);
+    unitsTest->assertTrue(msg.data(), actualState != UNCONVERTIBLE);
 
     // Unit conversion... untested:
     // UnitConverter converter(sourceUnit, targetUnit, status);
