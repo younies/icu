@@ -75,6 +75,48 @@ void UnitsTest::testConversionCapability() {
         {"kilometer-per-second", "foot-per-second", CONVERTIBLE},               //
         {"square-hectare", "p4-foot", CONVERTIBLE},                             //
         {"square-kilometer-per-second", "second-per-square-meter", RECIPROCAL}, //
+        // BEGIN: a copy of tests from unitsTest.txt
+        {"g-force", "meter-per-square-second", RECIPROCAL},                               //
+        {"ohm", "kilogram-square-meter-square-ampere-per-cubic-second", RECIPROCAL},      //
+        {"electronvolt", "kilogram-square-meter-per-square-second", RECIPROCAL},          //
+        {"dalton", "kilogram-square-meter-per-square-second", RECIPROCAL},                //
+        {"joule", "kilogram-square-meter-per-square-second", RECIPROCAL},                 //
+        {"meter-newton", "kilogram-square-meter-per-square-second", RECIPROCAL},          //
+        {"foot-pound-force", "kilogram-square-meter-per-square-second", RECIPROCAL},      //
+        {"calorie", "kilogram-square-meter-per-square-second", RECIPROCAL},               //
+        {"kilojoule", "kilogram-square-meter-per-square-second", RECIPROCAL},             //
+        {"british-thermal-unit", "kilogram-square-meter-per-square-second", RECIPROCAL},  //
+        {"foodcalorie", "kilogram-square-meter-per-square-second", RECIPROCAL},           //
+        {"kilocalorie", "kilogram-square-meter-per-square-second", RECIPROCAL},           //
+        {"hour-kilowatt", "kilogram-square-meter-second-per-cubic-second", RECIPROCAL},   //
+        {"therm-us", "kilogram-square-meter-per-square-second", RECIPROCAL},              //
+        {"newton", "kilogram-meter-per-square-second", RECIPROCAL},                       //
+        {"pound-force", "kilogram-meter-per-square-second", RECIPROCAL},                  //
+        {"hertz", "revolution-per-second", RECIPROCAL},                                   //
+        {"kilohertz", "revolution-per-second", RECIPROCAL},                               //
+        {"megahertz", "revolution-per-second", RECIPROCAL},                               //
+        {"gigahertz", "revolution-per-second", RECIPROCAL},                               //
+        {"lux", "candela-square-meter-per-square-meter", RECIPROCAL},                     //
+        {"milliwatt", "kilogram-square-meter-per-cubic-second", RECIPROCAL},              //
+        {"watt", "kilogram-square-meter-per-cubic-second", RECIPROCAL},                   //
+        {"horsepower", "kilogram-square-meter-per-cubic-second", RECIPROCAL},             //
+        {"kilowatt", "kilogram-square-meter-per-cubic-second", RECIPROCAL},               //
+        {"megawatt", "kilogram-square-meter-per-cubic-second", RECIPROCAL},               //
+        {"gigawatt", "kilogram-square-meter-per-cubic-second", RECIPROCAL},               //
+        {"solar-luminosity", "kilogram-square-meter-per-cubic-second", RECIPROCAL},       //
+        {"pascal", "kilogram-square-second-per-meter", RECIPROCAL},                       //
+        {"hectopascal", "kilogram-square-second-per-meter", RECIPROCAL},                  //
+        {"millibar", "kilogram-square-second-per-meter", RECIPROCAL},                     //
+        {"millimeter-ofhg", "kilogram-meter-square-second-per-square-meter", RECIPROCAL}, //
+        {"kilopascal", "kilogram-square-second-per-meter", RECIPROCAL},                   //
+        {"inch-ofhg", "kilogram-meter-square-second-per-square-meter", RECIPROCAL},       //
+        {"bar", "kilogram-square-second-per-meter", RECIPROCAL},                          //
+        {"atmosphere", "kilogram-square-second-per-meter", RECIPROCAL},                   //
+        {"megapascal", "kilogram-square-second-per-meter", RECIPROCAL},                   //
+        {"ofhg", "kilogram-square-second-per-square-meter", RECIPROCAL},                  //
+        {"knot", "meter-per-second", RECIPROCAL},                                         //
+        {"volt", "kilogram-square-meter-ampere-per-cubic-second", RECIPROCAL},            //
+        // END: a copy of tests from unitsTest.txt
     };
 
     for (const auto &testCase : testCases) {
