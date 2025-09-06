@@ -69,6 +69,7 @@ import com.ibm.icu.text.UnicodeSet;
 import com.ibm.icu.util.Currency;
 import com.ibm.icu.util.Currency.CurrencyUsage;
 import com.ibm.icu.util.CurrencyAmount;
+import com.ibm.icu.util.LocaleData;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.ULocale;
 
@@ -3189,7 +3190,7 @@ public class NumberFormatTest extends CoreTestFmwk {
 
         ParseThreadJB5358[] threads = new ParseThreadJB5358[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            threads[i] = new ParseThreadJB5358((DecimalFormat)fmt.clone(), numstr, expected, errors);
+            threads[i] = new ParseThreadJB5358(fmt.clone(), numstr, expected, errors);
             threads[i].start();
         }
         for (int i = 0; i < numThreads; i++) {
@@ -3807,7 +3808,7 @@ public class NumberFormatTest extends CoreTestFmwk {
         final int COUNT = 10;
 
         DecimalFormat fmt1 = new DecimalFormat("#0");
-        DecimalFormat fmt2 = (DecimalFormat)fmt1.clone();
+        DecimalFormat fmt2 = fmt1.clone();
 
         int[] res1 = new int[COUNT];
         int[] res2 = new int[COUNT];
@@ -4459,12 +4460,12 @@ public class NumberFormatTest extends CoreTestFmwk {
                 {"ja_JP",             "-1000.5",  "-￥1,000",          "-￥1,000",          "(￥1,000)",         "false"},
                 {"ja_JP@cf=account",  "-1000.5",  "(￥1,000)",         "-￥1,000",          "(￥1,000)",         "false"},
                 {"de_DE",             "-23456.7", "-23.456,70\u00A0€", "-23.456,70\u00A0€", "-23.456,70\u00A0€", "true" },
-                {"en_ID",             "1234.5",   "Rp 1.234,50",      "Rp 1.234,50",      "Rp 1.234,50",      "true"},
-                {"en_ID@cf=account",  "1234.5",   "Rp 1.234,50",      "Rp 1.234,50",      "Rp 1.234,50",      "true"},
-                {"en_ID@cf=standard", "1234.5",   "Rp 1.234,50",      "Rp 1.234,50",      "Rp 1.234,50",      "true"},
-                {"en_ID",             "-1234.5",  "-Rp 1.234,50",     "-Rp 1.234,50",     "(Rp 1.234,50)",    "true"},
-                {"en_ID@cf=account",  "-1234.5",  "(Rp 1.234,50)",    "-Rp 1.234,50",     "(Rp 1.234,50)",    "true"},
-                {"en_ID@cf=standard", "-1234.5",  "-Rp 1.234,50",     "-Rp 1.234,50",     "(Rp 1.234,50)",    "true"},
+                {"en_ID",             "1234.5",   "Rp 1.234",      "Rp 1.234",      "Rp 1.234",      "true"},
+                {"en_ID@cf=account",  "1234.5",   "Rp 1.234",      "Rp 1.234",      "Rp 1.234",      "true"},
+                {"en_ID@cf=standard", "1234.5",   "Rp 1.234",      "Rp 1.234",      "Rp 1.234",      "true"},
+                {"en_ID",             "-1234.5",  "-Rp 1.234",     "-Rp 1.234",     "(Rp 1.234)",    "true"},
+                {"en_ID@cf=account",  "-1234.5",  "(Rp 1.234)",    "-Rp 1.234",     "(Rp 1.234)",    "true"},
+                {"en_ID@cf=standard", "-1234.5",  "-Rp 1.234",     "-Rp 1.234",     "(Rp 1.234)",    "true"},
                 {"sh_ME",             "1234.5",   "1.234,50 €",        "1.234,50 €",        "1.234,50 €",        "true"},
                 {"sh_ME@cf=account",  "1234.5",   "1.234,50 €",        "1.234,50 €",        "1.234,50 €",        "true"},
                 {"sh_ME@cf=standard", "1234.5",   "1.234,50 €",        "1.234,50 €",        "1.234,50 €",        "true"},
@@ -5369,7 +5370,7 @@ public class NumberFormatTest extends CoreTestFmwk {
         DecimalFormat fmtCopy;
 
         final int newMultiplier = 37;
-        fmtCopy = (DecimalFormat) fmt.clone();
+        fmtCopy = fmt.clone();
         assertNotEquals("Value before setter", fmtCopy.getMultiplier(), newMultiplier);
         fmtCopy.setMultiplier(newMultiplier);
         assertEquals("Value after setter", fmtCopy.getMultiplier(), newMultiplier);
@@ -5378,7 +5379,7 @@ public class NumberFormatTest extends CoreTestFmwk {
         assertFalse("multiplier", fmt.equals(fmtCopy));
 
         final int newRoundingMode = RoundingMode.CEILING.ordinal();
-        fmtCopy = (DecimalFormat) fmt.clone();
+        fmtCopy = fmt.clone();
         assertNotEquals("Value before setter", fmtCopy.getRoundingMode(), newRoundingMode);
         fmtCopy.setRoundingMode(newRoundingMode);
         assertEquals("Value after setter", fmtCopy.getRoundingMode(), newRoundingMode);
@@ -5387,7 +5388,7 @@ public class NumberFormatTest extends CoreTestFmwk {
         assertFalse("roundingMode", fmt.equals(fmtCopy));
 
         final Currency newCurrency = Currency.getInstance("EAT");
-        fmtCopy = (DecimalFormat) fmt.clone();
+        fmtCopy = fmt.clone();
         assertNotEquals("Value before setter", fmtCopy.getCurrency(), newCurrency);
         fmtCopy.setCurrency(newCurrency);
         assertEquals("Value after setter", fmtCopy.getCurrency(), newCurrency);
@@ -5396,7 +5397,7 @@ public class NumberFormatTest extends CoreTestFmwk {
         assertFalse("currency", fmt.equals(fmtCopy));
 
         final CurrencyUsage newCurrencyUsage = CurrencyUsage.CASH;
-        fmtCopy = (DecimalFormat) fmt.clone();
+        fmtCopy = fmt.clone();
         assertNotEquals("Value before setter", fmtCopy.getCurrencyUsage(), newCurrencyUsage);
         fmtCopy.setCurrencyUsage(CurrencyUsage.CASH);
         assertEquals("Value after setter", fmtCopy.getCurrencyUsage(), newCurrencyUsage);
@@ -5414,25 +5415,25 @@ public class NumberFormatTest extends CoreTestFmwk {
         // Test equality with affixes. set affix methods can't capture special
         // characters which is why equality should fail.
         {
-          DecimalFormat fmtCopy = (DecimalFormat) fmt.clone();
+          DecimalFormat fmtCopy = fmt.clone();
           assertEquals("", fmt, fmtCopy);
           fmtCopy.setPositivePrefix(fmtCopy.getPositivePrefix());
           assertNotEquals("", fmt, fmtCopy);
         }
         {
-          DecimalFormat fmtCopy = (DecimalFormat) fmt.clone();
+          DecimalFormat fmtCopy = fmt.clone();
           assertEquals("", fmt, fmtCopy);
           fmtCopy.setPositiveSuffix(fmtCopy.getPositiveSuffix());
           assertNotEquals("", fmt, fmtCopy);
         }
         {
-          DecimalFormat fmtCopy = (DecimalFormat) fmt.clone();
+          DecimalFormat fmtCopy = fmt.clone();
           assertEquals("", fmt, fmtCopy);
           fmtCopy.setNegativePrefix(fmtCopy.getNegativePrefix());
           assertNotEquals("", fmt, fmtCopy);
         }
         {
-          DecimalFormat fmtCopy = (DecimalFormat) fmt.clone();
+          DecimalFormat fmtCopy = fmt.clone();
           assertEquals("", fmt, fmtCopy);
           fmtCopy.setNegativeSuffix(fmtCopy.getNegativeSuffix());
           assertNotEquals("", fmt, fmtCopy);
@@ -7184,4 +7185,49 @@ public class NumberFormatTest extends CoreTestFmwk {
                     testCase.expectedOutput, formatted);
         }
     }
+
+    @Test // ICU-23139
+    public void testStrictParse() throws java.text.ParseException {
+        // fr-FR: grouping separator '\u202F', decimal separator ','
+        // en-US: grouping separator ',', decimal separator '.'
+        // de: grouping separator '.', decimal separator ','
+        // de-CH: grouping separator '\u2019', decimal separator '.'
+        String[] locales = { "fr-FR", "en-US", "de", "de-CH" };
+        String[] toParse =
+            { "1.234", "1,234", "1\u00a0234", "1 234", "1.234,567" };
+        double[][] expectedLenient = {
+            {   1234,   1.234,         1234,    1234,    1234.567 }, // fr-FR
+            {  1.234,    1234,         1234,    1234,   1.234 }, // en-US
+            {   1234,   1.234,         1234,    1234,    1234.567 }, // de
+            {  1.234,    1234,         1234,    1234,   1.234 } // de-CH
+        };
+        double[][] expectedStrict  = {
+            {      1,   1.234,         1234,    1234,       1 }, // fr-FR
+            {  1.234,    1234,            1,       1,   1.234 }, // en-US
+            {   1234,   1.234,            1,       1,    1234.567 }, // de
+            {  1.234,       1,         1234,    1234,   1.234 } // de-CH
+        };
+
+        Number result;
+
+        for (int idxLocale = 0; idxLocale < locales.length; idxLocale++) {
+            Locale locale = Locale.forLanguageTag(locales[idxLocale]);
+            NumberFormat nf = NumberFormat.getInstance(locale);
+
+            nf.setParseStrict(false);
+            for (int i = 0; i < toParse.length; i++) {
+                String test = toParse[i];
+                result = nf.parse(test);
+                assertEquals("Lenient parsing", expectedLenient[idxLocale][i], result.doubleValue());
+            }
+
+            nf.setParseStrict(true);
+            for (int i = 0; i < toParse.length; i++) {
+                String test = toParse[i];
+                result = nf.parse(test);
+                assertEquals("Strict parsing", expectedStrict[idxLocale][i], result.doubleValue());
+            }
+        }
+    }
+
 }

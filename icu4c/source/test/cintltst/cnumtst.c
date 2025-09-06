@@ -81,6 +81,7 @@ static void Test22088_Ethiopic(void);
 static void TestChangingRuleset(void);
 static void TestParseWithEmptyCurr(void);
 static void TestDuration(void);
+static void TestStrictParse(void);
 
 #define TESTCASE(x) addTest(root, &x, "tsformat/cnumtst/" #x)
 
@@ -127,6 +128,7 @@ void addNumForTest(TestNode** root)
     TESTCASE(TestChangingRuleset);
     TESTCASE(TestParseWithEmptyCurr);
     TESTCASE(TestDuration);
+    TESTCASE(TestStrictParse);
 }
 
 /* test Parse int 64 */
@@ -954,7 +956,7 @@ free(result);
         status = U_ZERO_ERROR;
         u_uastrcpy(dest, numFormatted);   /* Parse the expected output of the formatting test */
         parsePos = 3;                 /*      12,345,678,900,987,654,321.12345679         */
-                                      /* start parsing at the the third char              */
+                                      /* start parsing at the third char              */
         resultSize = unum_parseDecimal(fmt, dest, -1, &parsePos, desta, DESTCAPACITY, &status);
         if (U_FAILURE(status)) {
             log_err("File %s, Line %d, status = %s\n", __FILE__, __LINE__, u_errorName(status));
@@ -3848,6 +3850,52 @@ static void TestDuration(void) {
                 assertUEquals("Wrong formatting result", expectedResults[i], actualResult);
             }
         }
+        unum_close(nf);
+    }
+}
+
+// ICU-23139
+static void TestStrictParse(void) {
+    #define LOCALE_COUNT 4
+    #define TESTS_COUNT 5
+    // fr-FR: grouping separator '\u202F', decimal separator ','
+    // en-US: grouping separator ',', decimal separator '.'
+    // de: grouping separator '.', decimal separator ','
+    // de-CH: grouping separator '\u2019', decimal separator '.'
+    const char* locales[LOCALE_COUNT] = { "fr_FR", "en_US", "de", "de_CH" };
+    const UChar* toParse[TESTS_COUNT] =
+        { u"1.234", u"1,234", u"1\u00a0234", u"1 234", u"1.234,567" };
+    double expectedLenient[LOCALE_COUNT][TESTS_COUNT] = {
+        {   1234,   1.234,         1234,    1234,    1234.567 }, // fr-FR
+        {  1.234,    1234,         1234,    1234,   1.234 }, // en-US
+        {   1234,   1.234,         1234,    1234,    1234.567 }, // de
+        {  1.234,    1234,         1234,    1234,   1.234 } // de-CH
+    };
+    double expectedStrict[LOCALE_COUNT][TESTS_COUNT] = {
+        {      1,   1.234,         1234,    1234,       1 }, // fr-FR
+        {  1.234,    1234,            1,       1,   1.234 }, // en-US
+        {   1234,   1.234,            1,       1,    1234.567 }, // de
+        {  1.234,       1,         1234,    1234,   1.234 } // de-CH
+   };
+
+    UErrorCode status = U_ZERO_ERROR;
+    double result;
+    for (int idxLocale = 0; idxLocale < LOCALE_COUNT; idxLocale++) {
+        status = U_ZERO_ERROR;
+        UNumberFormat* nf = unum_open(UNUM_DEFAULT, NULL, -1, locales[idxLocale], NULL, &status);
+
+        unum_setAttribute(nf, UNUM_LENIENT_PARSE, true);
+        for (int i = 0; i < TESTS_COUNT; i++) {
+            result = unum_parseDouble(nf, toParse[i], -1, 0, &status);
+            assertDoubleEquals("Lenient parsing", expectedLenient[idxLocale][i], result);
+        }
+
+        unum_setAttribute(nf, UNUM_LENIENT_PARSE, false);
+        for (int i = 0; i < TESTS_COUNT; i++) {
+            result = unum_parseDouble(nf, toParse[i], -1, 0, &status);
+            assertDoubleEquals("Strict parsing", expectedStrict[idxLocale][i], result);
+        }
+
         unum_close(nf);
     }
 }

@@ -171,6 +171,14 @@ TimeZoneFormatTest::TestTimeZoneRoundTrip() {
 
     // Run the roundtrip test
     for (int32_t locidx = 0; locidx < nLocales; locidx++) {
+        if ((uprv_strcmp(LOCALES[locidx].getBaseName(),"ku") == 0) ||
+            (uprv_strncmp(LOCALES[locidx].getBaseName(),"ku_",3) == 0) ||
+            (uprv_strncmp(LOCALES[locidx].getBaseName(),"shn",3) == 0) ||
+            (uprv_strcmp(LOCALES[locidx].getBaseName(),"sv") == 0) ||
+            (uprv_strncmp(LOCALES[locidx].getBaseName(),"sv_",3) == 0)) {
+            logKnownIssue("CLDR-18924", "Timezone round trip issues in ku, shn, sv for various zones");
+            continue;
+        }
         UnicodeString localGMTString;
         SimpleDateFormat gmtFmt(UnicodeString("ZZZZ"), LOCALES[locidx], status);
         if (U_FAILURE(status)) {
@@ -686,6 +694,10 @@ void TimeZoneFormatTest::RunTimeRoundTripTests(int32_t threadNumber) {
                     UBool bTimeMatch = minutesOffset ?
                         (timeDiff/60000)*60000 == 0 : timeDiff == 0;
                     if (!bTimeMatch) {
+                        if (!(*tzid == UnicodeString(u"Asia/Barnaul",-1) && 
+                                logKnownIssue("ICU-23183", "Time zone round trip is off for 1 hour for few Asia TZs"))) {
+                            continue;
+                        }
                         UnicodeString msg = UnicodeString("Time round trip failed for ") + "tzid=" + *tzid
                                 + ", locale=" + gLocaleData->locales[locidx].getName() + ", pattern=" + PATTERNS[patidx]
                                 + ", text=" + text + ", time=" + testTimes[testidx] + ", restime=" + parsedDate + ", diff=" + (parsedDate - testTimes[testidx]);

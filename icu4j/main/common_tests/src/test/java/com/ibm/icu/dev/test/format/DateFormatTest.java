@@ -1419,14 +1419,14 @@ public class DateFormatTest extends CoreTestFmwk {
         { "ja", "America/Los_Angeles", "2004-01-15T00:00:00Z", "Z", "-0800", "-8:00" },
         { "ja", "America/Los_Angeles", "2004-01-15T00:00:00Z", "ZZZZ", "GMT-08:00", "-8:00" },
         { "ja", "America/Los_Angeles", "2004-01-15T00:00:00Z", "z", "GMT-8", "America/Los_Angeles" },
-        { "ja", "America/Los_Angeles", "2004-01-15T00:00:00Z", "zzzz", "\u30a2\u30e1\u30ea\u30ab\u592a\u5e73\u6d0b\u6a19\u6e96\u6642", "America/Los_Angeles" },
+        { "ja", "America/Los_Angeles", "2004-01-15T00:00:00Z", "zzzz", "\u7c73\u56fd\u592a\u5e73\u6d0b\u6a19\u6e96\u6642", "America/Los_Angeles" },
         { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "Z", "-0700", "-7:00" },
         { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "ZZZZ", "GMT-07:00", "-7:00" },
         { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "z", "GMT-7", "America/Los_Angeles" },
-        { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "zzzz", "\u30a2\u30e1\u30ea\u30ab\u592a\u5e73\u6d0b\u590f\u6642\u9593", "America/Los_Angeles" },
+        { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "zzzz", "\u7c73\u56fd\u592a\u5e73\u6d0b\u590f\u6642\u9593", "America/Los_Angeles" },
     // icu ja.txt has exemplar city for this time zone
         { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "v", "\u30ED\u30B5\u30F3\u30BC\u30EB\u30B9\u6642\u9593", "America/Los_Angeles" },
-        { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "vvvv", "\u30A2\u30E1\u30EA\u30AB\u592A\u5E73\u6D0B\u6642\u9593", "America/Los_Angeles" },
+        { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "vvvv", "\u7c73\u56fd\u592a\u5e73\u6d0b\u6642\u9593", "America/Los_Angeles" },
         { "ja", "America/Los_Angeles", "2004-07-15T00:00:00Z", "VVVV", "\u30ED\u30B5\u30F3\u30BC\u30EB\u30B9\u6642\u9593", "America/Los_Angeles" },
 
         { "ja", "America/Argentina/Buenos_Aires", "2004-01-15T00:00:00Z", "Z", "-0300", "-3:00" },
@@ -2451,7 +2451,7 @@ public class DateFormatTest extends CoreTestFmwk {
 
         ICUResourceBundle rb = (ICUResourceBundle)UResourceBundle.getBundleInstance(ICUData.ICU_BASE_NAME,"de_DE");
         DateFormatSymbols sym = new DateFormatSymbols(rb, Locale.GERMANY);
-        DateFormatSymbols sym2 = (DateFormatSymbols)sym.clone();
+        DateFormatSymbols sym2 = sym.clone();
         if (sym.hashCode() != sym2.hashCode()) {
             errln("fail, date format symbols hashcode not equal");
         }
@@ -3981,7 +3981,7 @@ public class DateFormatTest extends CoreTestFmwk {
     public void TestSimpleDateFormatConstructor_String_String_ULocale() {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("", "", null);
-            sdf = (SimpleDateFormat) sdf.clone();
+            sdf = sdf.clone();
         } catch (Exception e) {
             errln("SimpleDateFormat(String pattern, String override, ULocale loc) "
                     + "was not suppose to return an exception when constructing a new " + "SimpleDateFormat object.");
@@ -4634,7 +4634,7 @@ public class DateFormatTest extends CoreTestFmwk {
 
             // now try context & standard format call
             sdfmt.setContext(item.capitalizationContext);
-            SimpleDateFormat sdfmtClone = (SimpleDateFormat)sdfmt.clone();
+            SimpleDateFormat sdfmtClone = sdfmt.clone();
             if (!sdfmtClone.equals(sdfmt)) {
                 errln("FAIL: for locale " + item.locale +  ", capitalizationContext " + item.capitalizationContext +
                         ", sdfmt.clone() != sdfmt (for SimpleDateFormat)");
@@ -5574,6 +5574,17 @@ public class DateFormatTest extends CoreTestFmwk {
             String pattern = ((SimpleDateFormat) fmt).toPattern();
             assertEquals("Format pattern", cas[1], pattern);
         }
+    }
+
+    @Test
+    public void testExtendedYear() {
+        ULocale locale = new ULocale("en-u-ca-ethiopic-amete-alem");
+        DateFormat fmt = DateFormat.getInstanceForSkeleton("yMd", locale);
+        DateFormat fmt2 = DateFormat.getInstanceForSkeleton("uMd", locale);
+        String result = fmt.format(new Date(98, 5-1, 25));
+        String result2 = fmt2.format(new Date(98, 5-1, 25));
+        assertEquals("Format", "9/17/7490 ERA0", result);
+        assertEquals("Format", result, result2);
     }
 
     @Test
