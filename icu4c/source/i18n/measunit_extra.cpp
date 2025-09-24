@@ -100,6 +100,9 @@ enum PowerPart {
 // "fluid-ounce-imperial".
 constexpr int32_t kSimpleUnitOffset = 512;
 
+// Trie value offset for aliases, e.g. "portion" replaced by "part"
+constexpr int32_t kAliasOffset = 51200; // This will give a very big space for the units ids.
+
 const struct UnitPrefixStrings {
     const char* const string;
     UMeasurePrefix value;
@@ -255,6 +258,76 @@ class SimpleUnitIdentifiersSink : public icu::ResourceSink {
     int32_t outIndex;
 };
 
+class UnitAliasesSink : public icu::ResourceSink {
+  public:
+    /**
+     * Constructor.
+     * @param unitAliases The output vector of unit alias identifiers (CharString).
+     * @param unitReplacements The output vector of replacements for the unit aliases (CharString).
+     */
+    explicit UnitAliasesSink(MaybeStackVector<CharString> &unitAliases,
+                             MaybeStackVector<CharString> &unitReplacements)
+        : unitAliases(unitAliases), unitReplacements(unitReplacements) {}
+
+    /**
+     * Adds the table keys (unit aliases) found in value to the unitAliases output vector and the
+     * replacements for the unit aliases to the unitReplacements output vector.
+     * @param key The key of the resource passed to `value`: the second
+     *     parameter of the ures_getAllItemsWithFallback() call.
+     * @param value Should be a ResourceTable value, if
+     *     ures_getAllItemsWithFallback() was called correctly for this sink.
+     * @param noFallback Ignored.
+     * @param status The standard ICU error code output parameter.
+     */
+    void put(const char * /*key*/, ResourceValue &value, UBool /*noFallback*/,
+             UErrorCode &status) override {
+        ResourceTable table = value.getTable(status);
+        if (U_FAILURE(status)) return;
+
+        // Collect the unit aliases from the table resource.
+        const char *unitAlias;
+        for (int32_t i = 0; table.getKeyAndValue(i, unitAlias, value); ++i) {
+            int32_t unitAliasLen = static_cast<int32_t>(uprv_strlen(unitAlias));
+            CharString *unitAliasCharStr = unitAliases.emplaceBackAndCheckErrorCode(status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+            unitAliasCharStr->append(unitAlias, unitAliasLen, status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+
+            // Find the replacement for this unit alias from the alias table resource.
+            ResourceTable aliasTable = value.getTable(status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+            if (!aliasTable.findValue("replacement", value)) {
+                status = U_INVALID_FORMAT_ERROR;
+                break;
+            }
+            int32_t len;
+            const char16_t *uReplacement = value.getString(len, status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+
+            CharString *replacementCharStr = unitReplacements.emplaceBackAndCheckErrorCode(status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+            replacementCharStr->appendInvariantChars(uReplacement, len, status);
+            if (U_FAILURE(status)) {
+                return;
+            }
+        }
+    }
+
+  private:
+    MaybeStackVector<CharString> &unitAliases;
+    MaybeStackVector<CharString> &unitReplacements;
+};
+
 /**
  * A ResourceSink that collects information from `unitQuantities` in the `units`
  * resource to provide key->value lookups from base unit to category, as well as
@@ -320,6 +393,11 @@ class CategoriesSink : public icu::ResourceSink {
 };
 
 icu::UInitOnce gUnitExtrasInitOnce {};
+
+// Array of unit aliases.
+MaybeStackVector<icu::CharString> gUnitAliases;
+// Array of replacements for the unit aliases.
+MaybeStackVector<icu::CharString> gUnitReplacements;
 
 // Array of simple unit IDs.
 //
@@ -453,6 +531,24 @@ void U_CALLCONV initUnitExtras(UErrorCode& status) {
                                              simpleUnitsCount, b, kSimpleUnitOffset);
     ures_getAllItemsWithFallback(unitsBundle.getAlias(), "convertUnits", identifierSink, status);
 
+    // Populate gUnitAliases and gUnitReplacements.
+    LocalUResourceBundlePointer aliasBundle(ures_open(U_ICUDATA_ALIAS, "metadata", &status));
+    if (U_FAILURE(status)) {
+        return;
+    }
+    UnitAliasesSink aliasSink(gUnitAliases, gUnitReplacements);
+    ures_getAllItemsWithFallback(aliasBundle.getAlias(), "alias/unit", aliasSink, status);
+    if (U_FAILURE(status)) {
+        return;
+    }
+
+    for (int32_t i = 0; i < gUnitAliases.length(); i++) {
+        b.add(gUnitAliases[i]->data(), i + kAliasOffset, status);
+        if (U_FAILURE(status)) {
+            return;
+        }
+    }
+
     // Build the CharsTrie
     // TODO: Use SLOW or FAST here?
     StringPiece result = b.buildStringPiece(USTRINGTRIE_BUILD_FAST, status);
@@ -479,8 +575,10 @@ public:
           this->fType = TYPE_INITIAL_COMPOUND_PART;
       } else if (fMatch < kSimpleUnitOffset) {
           this->fType = TYPE_POWER_PART;
-      } else {
+      } else if (fMatch < kAliasOffset) {
           this->fType = TYPE_SIMPLE_UNIT;
+      } else {
+          this->fType = TYPE_ALIAS;
       }
   }
 
@@ -505,6 +603,7 @@ public:
       TYPE_POWER_PART,
       TYPE_SIMPLE_UNIT,
       TYPE_CONSTANT_DENOMINATOR,
+      TYPE_ALIAS,
   };
 
   // Calling getType() is invalid, resulting in an assertion failure, if Token
@@ -549,6 +648,11 @@ public:
     int32_t getSimpleUnitIndex() const {
         U_ASSERT(getType() == TYPE_SIMPLE_UNIT);
         return fMatch - kSimpleUnitOffset;
+    }
+
+    int32_t getAliasIndex() const {
+        U_ASSERT(getType() == TYPE_ALIAS);
+        return static_cast<int32_t>(fMatch - kAliasOffset);
     }
 
     // TODO: Consider moving this to a separate utility class.
@@ -673,6 +777,10 @@ public:
             }
 
             if (singleUnitOrConstant.isConstantDenominator()) {
+                if (result.constantDenominator > 0) {
+                    status = kUnitIdentifierSyntaxError;
+                    return result;
+                }
                 result.constantDenominator = singleUnitOrConstant.getConstantDenominator();
                 result.complexity = UMEASURE_UNIT_COMPOUND;
                 continue;
@@ -727,6 +835,9 @@ private:
     // references to that string.
     StringPiece fSource;
     BytesTrie fTrie;
+
+    // Storage for modified source string when aliases are expanded
+    CharString fModifiedSource;
 
     // Set to true when we've seen a "-per-" or a "per-", after which all units
     // are in the denominator. Until we find an "-and-", at which point the
@@ -922,6 +1033,36 @@ private:
             case Token::TYPE_SIMPLE_UNIT:
                 singleUnitResult.index = token.getSimpleUnitIndex();
                 break;
+
+            case Token::TYPE_ALIAS: {
+                auto aliasIndex = token.getAliasIndex();
+                if (aliasIndex < 0 || aliasIndex >= gUnitAliases.length()) {
+                    status = kUnitIdentifierSyntaxError;
+                    return {};
+                }
+                auto replacement = gUnitReplacements[aliasIndex];
+
+                // Create new source string: replacement + remaining unparsed portion
+                fModifiedSource.clear();
+                fModifiedSource.append(replacement->data(), replacement->length(), status);
+                if (U_FAILURE(status)) {
+                    return {};
+                }
+
+                // Add the remaining unparsed portion of fSource starting from fIndex
+                if (fIndex < fSource.length()) {
+                    StringPiece remaining = fSource.substr(fIndex);
+                    fModifiedSource.append(remaining.data(), remaining.length(), status);
+                    if (U_FAILURE(status)) {
+                        return {};
+                    }
+                }
+
+                // Update parser state with new source and reset index
+                fSource = StringPiece(fModifiedSource.data(), fModifiedSource.length());
+                fIndex = 0;
+                break;
+            }
 
             default:
                 status = kUnitIdentifierSyntaxError;
