@@ -2729,6 +2729,24 @@ StringEnumeration* MeasureUnit::getAvailableTypes(UErrorCode &errorCode) {
     return result;
 }
 
+bool MeasureUnit::validateAndGet(StringPiece type, StringPiece subtype, MeasureUnit &result) {
+    // Find the type index using binary search
+    int32_t typeIdx = binarySearch(gTypes, 0, UPRV_LENGTHOF(gTypes), type);
+    if (typeIdx == -1) {
+        return false;  // Type not found
+    }
+    
+    // Find the subtype within the type's range using binary search
+    int32_t subtypeIdx = binarySearch(gSubTypes, gOffsets[typeIdx], gOffsets[typeIdx + 1], subtype);
+    if (subtypeIdx == -1) {
+        return false;  // Subtype not found
+    }
+    
+    // Create the MeasureUnit and return it
+    result.setTo(typeIdx, subtypeIdx - gOffsets[typeIdx]);
+    return true;
+}
+
 bool MeasureUnit::findBySubType(StringPiece subType, MeasureUnit* output) {
     // Sanity checking kCurrencyOffset and final entry in gOffsets
     U_ASSERT(uprv_strcmp(gTypes[kCurrencyOffset], "currency") == 0);
