@@ -2563,6 +2563,18 @@ static int32_t binarySearch(
     return -1;
 }
 
+/**
+ * Helper function to get the subtype range for a given type index.
+ * @param typeIdx the type index (0 to UPRV_LENGTHOF(gTypes)-1)
+ * @param start will be set to the starting index in gSubTypes
+ * @param end will be set to the ending index in gSubTypes (exclusive)
+ */
+static void getSubtypeRange(int32_t typeIdx, int32_t &start, int32_t &end) {
+    U_ASSERT(typeIdx >= 0 && typeIdx < UPRV_LENGTHOF(gTypes));
+    start = gOffsets[typeIdx];
+    end = gOffsets[typeIdx + 1];
+}
+
 MeasureUnit::MeasureUnit() : MeasureUnit(kBaseTypeIdx, kBaseSubTypeIdx) {
 }
 
@@ -2680,7 +2692,9 @@ int32_t MeasureUnit::getAvailable(
     }
     int32_t idx = 0;
     for (int32_t typeIdx = 0; typeIdx < UPRV_LENGTHOF(gTypes); ++typeIdx) {
-        int32_t len = gOffsets[typeIdx + 1] - gOffsets[typeIdx];
+        int32_t start, end;
+        getSubtypeRange(typeIdx, start, end);
+        int32_t len = end - start;
         for (int32_t subTypeIdx = 0; subTypeIdx < len; ++subTypeIdx) {
             dest[idx].setTo(typeIdx, subTypeIdx);
             ++idx;
@@ -2702,7 +2716,9 @@ int32_t MeasureUnit::getAvailable(
     if (typeIdx == -1) {
         return 0;
     }
-    int32_t len = gOffsets[typeIdx + 1] - gOffsets[typeIdx];
+    int32_t start, end;
+    getSubtypeRange(typeIdx, start, end);
+    int32_t len = end - start;
     if (destCapacity < len) {
         errorCode = U_BUFFER_OVERFLOW_ERROR;
         return len;
@@ -2737,13 +2753,15 @@ bool MeasureUnit::validateAndGet(StringPiece type, StringPiece subtype, MeasureU
     }
     
     // Find the subtype within the type's range using binary search
-    int32_t subtypeIdx = binarySearch(gSubTypes, gOffsets[typeIdx], gOffsets[typeIdx + 1], subtype);
+    int32_t start, end;
+    getSubtypeRange(typeIdx, start, end);
+    int32_t subtypeIdx = binarySearch(gSubTypes, start, end, subtype);
     if (subtypeIdx == -1) {
         return false;  // Subtype not found
     }
     
     // Create the MeasureUnit and return it
-    result.setTo(typeIdx, subtypeIdx - gOffsets[typeIdx]);
+    result.setTo(typeIdx, subtypeIdx - start);
     return true;
 }
 
@@ -2757,9 +2775,11 @@ bool MeasureUnit::findBySubType(StringPiece subType, MeasureUnit* output) {
         if (t == kCurrencyOffset) {
             continue;
         }
-        int32_t st = binarySearch(gSubTypes, gOffsets[t], gOffsets[t + 1], subType);
+        int32_t start, end;
+        getSubtypeRange(t, start, end);
+        int32_t st = binarySearch(gSubTypes, start, end, subType);
         if (st >= 0) {
-            output->setTo(t, st - gOffsets[t]);
+            output->setTo(t, st - start);
             return true;
         }
     }
